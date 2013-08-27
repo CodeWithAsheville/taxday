@@ -1,0 +1,275 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Whats my Taxes?</title>
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 5px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+
+    <script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
+    <!--[if lte IE 8]>
+     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.ie.css" />
+    <![endif]-->    <!-- <style type="text/javascript">#map { height: 180px; }</style> -->
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.core.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.widget.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.position.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ui.autocomplete.min.js"></script>
+    <script type="text/javascript" type="text/javascript" src="js/bootstrap.js"></script>
+    <script type="text/javascript" type="text/javascript" src="js/typeahead.min.js"></script>
+      <link href="css/jquery-ui.css" rel="stylesheet">
+    
+     
+
+    <style type="text/css">
+      #map,body,html { 
+        height: 100%;
+        width:  100%;
+      }
+      #resultsholder{
+      }
+      .mapdiv {
+        height: 80%;
+        width: 100%;
+      }
+      .bigtest {
+        height: 100%;
+      }
+    </style>
+
+
+
+
+  </head>
+
+
+  <body data-twttr-rendered="true" background-color="#F0F0F0">
+    <div class="panel text-info bigtest"><h2>Whats my Taxes?</h2></legend>
+      <div  class="panel text-info" id="resultsholder" >
+        <label class="text-info" for="txtSearch"></label>
+        <div class="input-group input-group-lg">
+          <input type="text" class="form-control input-lg" id="txtSearch" placeholder="Search Address" > 
+          <span class="input-group-btn">
+            <button class="btn btn-info btn-lg" type="button">Search</button>
+          </span>
+        </div>
+        <!-- <div class="input-group input-group-lg">
+          <input type="text" class="form-control input-lg" id="txtSearch2" placeholder="Search Address" > 
+          <span class="input-group-btn">
+            <button class="btn btn-info btn-lg" type="button">Search</button>
+          </span>
+        </div>-->
+        <span id="results"></span>
+        <span id="loading" class="text-info" style="visibility:hidden">
+          <img   src="img/loading.gif" />
+        </span>
+      </div>
+      <div class="panel mapdiv">
+        <div class="panel" id="map"></div> <!-- This one wants to be 100% height -->
+      </div>
+  </div>
+
+<script>
+
+      var agsServerGeocode='gis.ashevillenc.gov'; //ArcGIS  server name for geocoding
+      var agsServerInstanceNameGeocode='COA_ArcGIS_Server'; //ArcGIS  server instance for geocoding
+      var geocdingLayerName='Buncombe_Parcel_Address'; //geocoding service to use.
+      var mySRID=2264 //your projection id
+      
+      var urlstr= 'http://'+agsServerGeocode+'/'+agsServerInstanceNameGeocode+'/rest/services/'+geocdingLayerName+'/GeocodeServer/findAddressCandidates';
+
+      var queryStr = function(){
+
+        var q = urlstr;
+            if ($('#txtSearch2').val()) {
+                q += "?Street=" + encodeURIComponent($('#txtSearch2').val())+'&outFields=&f=json';
+            }
+            return q;
+      };
+      
+   
+     var zoomMap = function(data){
+      xStr=data.geometries[0].x;
+      yStr=data.geometries[0].y;
+      map.setView(new L.LatLng(yStr, xStr), 17);
+      var startPt = '[{"type": "Point","coordinates":['+xStr+','+yStr+']}]';
+      drawPoints(startPt);
+      return '';
+    }
+
+   function getLatLong(someData){
+      xStr=someData.x;
+      yStr=someData.y;
+      var urlStr = 'http://'+agsServerGeocode+'/'+agsServerInstanceNameGeocode+'/rest/services/Geometry/GeometryServer/project';
+      var aPt=JSON.stringify({geometryType:"esriGeometryPoint",geometries : [{"x":xStr,"y":yStr}]});
+
+      var data={f:"json",inSR:mySRID,outSR:4326,geometries:aPt};
+
+       $.ajax({
+          url: urlStr,
+          dataType: "jsonp",
+          data: data,
+           crossDomain: true,
+           success:function(data){zoomMap(data);},
+           error:function(x,t,m){console.log('fail');}//updateResultsFail(t,'Error with transforming to WGS84!')
+       });
+     }
+
+ function drawPoints(GJfeat){
+        clearMap();
+        GJfeatObject=JSON.parse(GJfeat);
+        var geojsonMarkerOptions = {
+            radius: 8,
+            fillColor: "#468847",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+            
+        };
+        
+        var gjPT = L.geoJson(GJfeatObject, {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, geojsonMarkerOptions);
+            }
+        });
+
+       gjPT.addTo(map);
+
+    }
+
+    function clearMap() {
+        for(i in map._layers) {
+            if(map._layers[i]._path != undefined) {
+                try {
+                    map.removeLayer(map._layers[i]);
+                }
+                catch(e) {
+                    //do nothing....
+                }
+            }
+        }
+    }
+
+// $('#txtSearch2').typeahead({
+//     header: 'Zoom to:',
+//     template: ['<p class="ta-h1">{{label}}</p>',
+//     '<p class="ta-p">{{x}}</p>',
+//     '<p class="ta-p">{{y}}</p>'
+//     ].join(''),
+//     limit: 5,
+//     remote: {
+//         cache:false,
+//         url:  urlstr,
+//         replace:queryStr,
+//         dataType:"jsonp",
+//         filter: function (data) {
+
+//              for(i = 0; i < data.candidates.length; i++) {
+//               var responseJSON = [];
+//                responseJSON.push({ 
+//                 label:data.candidates[i].address, 
+//                 value:data.candidates[i].address, 
+//                 x:data.candidates[i].location.x,
+//                 y:data.candidates[i].location.y,
+//               });
+//                return responseJSON;
+//             }
+//         },
+//     },
+//     engine: Hogan
+// });
+
+
+$('#txtSearch').autocomplete({
+    source: function (request, response) {
+            //This is for geocoding
+
+       addressStr = $('#txtSearch').val();
+       ZipStr = 28801;
+       var urlStr = 'http://'+agsServerGeocode+'/'+agsServerInstanceNameGeocode+'/rest/services/'+geocdingLayerName+'/GeocodeServer/findAddressCandidates';
+       var data={f:"json",Street:addressStr,Zone:ZipStr,outSR:4326};
+
+      $.ajax({
+        url: urlStr,
+        dataType: "jsonp",
+        data: data,
+        success: function (data) {
+          if (data.candidates) {
+            response($.map(data.candidates.slice(0, 14), function (item) {//only display first 10
+              return { label: item.address, value: item.address, x:item.location.x,y:item.location.y } 
+            }));
+          }
+        }
+      });
+    },
+    minLength: 5,
+    select: function (event, ui) {
+      this.blur();
+      getLatLong(ui.item);
+    }
+  });
+
+
+
+
+</script>
+
+
+
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript">
+
+        var mapAttr = 'Map data from The City of Asheville , NC',
+        mapUrl = 'http://opendatacatalog.ashevillenc.gov/coatilesbw/{z}/{x}/{y}.png';
+
+        var basemap = L.tileLayer(
+          mapUrl, 
+          {
+            maxZoom: 18,
+            minZoom: 11,
+            tms: true,
+            attribution:mapAttr,
+        });
+
+        var parcel= L.tileLayer(
+          'http://opendatacatalog.ashevillenc.gov/coatiles_bcparcel//{z}/{x}/{y}.png', 
+          {
+            maxZoom: 18,
+            minZoom: 15,
+            tms: true,
+            attribution:mapAttr,
+        });
+
+        var map = L.map('map', {
+          center: [35.593,-82.5488],
+          zoom: 14,
+          layers: [basemap,parcel]
+        });
+
+
+      var baseLayers = {"Base Map": basemap};
+
+      var parcels = {"BC Parcels": parcel}
+
+      layersControl = new L.control.layers(baseLayers,parcels,{collapsed: false});
+
+      layersControl.addTo(map);
+   
+    </script>
+ 
+  </body>
+</html>
+
