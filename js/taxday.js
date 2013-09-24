@@ -1,3 +1,9 @@
+String.prototype.isNull = function(replaceValue) {
+
+    if(replaceValue==null){rep='';}else{rep=replaceValue}
+
+    if(this==null || this=='Null'){return rep;}else{return this;}
+  };  
 var TaxDay = TaxDay || {};
 var TaxDay = {
   agsServerGeocode:'gis.ashevillenc.gov', //ArcGIS  server name for geocoding
