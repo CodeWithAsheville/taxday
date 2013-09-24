@@ -129,7 +129,7 @@
          if ( $('#txtSearch').val()){
 
              addressStr = $('#txtSearch').val();
-             var urlStr = 'http://'+QuickMap.agsServerGeocode+'/'+QuickMap.agsServerInstanceNameGeocode+'/rest/services/'+QuickMap.geocdingLayerName+'/GeocodeServer/findAddressCandidates';
+             var urlStr = 'http://'+TaxDay.agsServerGeocode+'/'+TaxDay.agsServerInstanceNameGeocode+'/rest/services/'+TaxDay.geocdingLayerName+'/GeocodeServer/findAddressCandidates';
              var data={f:"json",Street:addressStr};
 
             $.ajax({
@@ -139,7 +139,7 @@
               success: function (data) {
                 if (data.candidates) {
                   item = data.candidates[0];
-                  QuickMap.getLatLong({ label: item.address, value: item.address, x:item.location.x,y:item.location.y } );
+                  TaxDay.getLatLong({ label: item.address, value: item.address, x:item.location.x,y:item.location.y } );
                 }
               }
             });
