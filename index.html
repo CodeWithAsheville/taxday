@@ -57,29 +57,6 @@
 
 
    
-      $('#search').click(function() {
-         if ( $('#txtSearch').val()){
-
-             addressStr = $('#txtSearch').val();
-             var urlStr = 'http://'+QuickMap.agsServerGeocode+'/'+QuickMap.agsServerInstanceNameGeocode+'/rest/services/'+QuickMap.geocdingLayerName+'/GeocodeServer/findAddressCandidates';
-             var data={f:"json",Street:addressStr};
-
-            $.ajax({
-              url: urlStr,
-              dataType: "jsonp",
-              data: data,
-              success: function (data) {
-                if (data.candidates) {
-                  item = data.candidates[0];
-                  QuickMap.getLatLong({ label: item.address, value: item.address, x:item.location.x,y:item.location.y } );
-                }
-              }
-            });
-
-
-         }
-      });
-        
 
 
 
@@ -119,34 +96,61 @@
 
     <!-- Placed at the end of the document so the pages load faster -->
     <script type="text/javascript">
-$('#txtSearch').autocomplete({
-    source: function (request, response) {
-            //This is for geocoding
+    $('#txtSearch').autocomplete({
+        source: function (request, response) {
+                //This is for geocoding
 
-       addressStr = $('#txtSearch').val();
-       ZipStr = 28801;
-       var urlStr = 'http://'+TaxDay.agsServerGeocode+'/'+TaxDay.agsServerInstanceNameGeocode+'/rest/services/'+TaxDay.geocdingLayerName+'/GeocodeServer/findAddressCandidates';
-       var data={f:"json",Street:addressStr,Zone:ZipStr,outSR:4326};
+           addressStr = $('#txtSearch').val();
+           ZipStr = 28801;
+           var urlStr = 'http://'+TaxDay.agsServerGeocode+'/'+TaxDay.agsServerInstanceNameGeocode+'/rest/services/'+TaxDay.geocdingLayerName+'/GeocodeServer/findAddressCandidates';
+           var data={f:"json",Street:addressStr,Zone:ZipStr,outSR:4326};
 
-      $.ajax({
-        url: urlStr,
-        dataType: "jsonp",
-        data: data,
-        success: function (data) {
-          if (data.candidates) {
-            response($.map(data.candidates.slice(0, 14), function (item) {//only display first 10
-              return { label: item.address, value: item.address, x:item.location.x,y:item.location.y } 
-            }));
-          }
+          $.ajax({
+            url: urlStr,
+            dataType: "jsonp",
+            data: data,
+            success: function (data) {
+              if (data.candidates) {
+                response($.map(data.candidates.slice(0, 14), function (item) {//only display first 10
+                  return { label: item.address, value: item.address, x:item.location.x,y:item.location.y } 
+                }));
+              }
+            }
+          });
+        },
+        minLength: 5,
+        select: function (event, ui) {
+          this.blur();
+          TaxDay.getLatLong(ui.item);
         }
       });
-    },
-    minLength: 5,
-    select: function (event, ui) {
-      this.blur();
-      TaxDay.getLatLong(ui.item);
-    }
-  });
+
+      $('#search').click(function() {
+         if ( $('#txtSearch').val()){
+
+             addressStr = $('#txtSearch').val();
+             var urlStr = 'http://'+QuickMap.agsServerGeocode+'/'+QuickMap.agsServerInstanceNameGeocode+'/rest/services/'+QuickMap.geocdingLayerName+'/GeocodeServer/findAddressCandidates';
+             var data={f:"json",Street:addressStr};
+
+            $.ajax({
+              url: urlStr,
+              dataType: "jsonp",
+              data: data,
+              success: function (data) {
+                if (data.candidates) {
+                  item = data.candidates[0];
+                  QuickMap.getLatLong({ label: item.address, value: item.address, x:item.location.x,y:item.location.y } );
+                }
+              }
+            });
+
+
+         }
+      });
+
+
+
+
 
         var mapAttr = 'Map data from The City of Asheville , NC',
         mapUrl = 'http://opendatacatalog.ashevillenc.gov/coatilesbw/{z}/{x}/{y}.png';
