@@ -127,7 +127,7 @@
 
       $('#search').click(function() {
          if ( $('#txtSearch').val()){
-
+              alert($('#txtSearch').val());
              addressStr = $('#txtSearch').val();
              var urlStr = 'http://'+TaxDay.agsServerGeocode+'/'+TaxDay.agsServerInstanceNameGeocode+'/rest/services/'+TaxDay.geocdingLayerName+'/GeocodeServer/findAddressCandidates';
              var data={f:"json",Street:addressStr};
